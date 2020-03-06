@@ -1,0 +1,43 @@
+public ActionResult Tools(int id)
+        {
+
+            try
+            {
+                MasterDataModel model = new MasterDataModel();
+                List<ChapterData> ChapterResults = new List<ChapterData>();
+                var MasterDataList = db.MasterDatas.Where(x => x.Id == id);
+                model.ParentName = db.MasterDatas.Where(x => x.Id == MasterDataList.FirstOrDefault().ParentId).FirstOrDefault().Name;
+                model.ParentId = (int)db.MasterDatas.Where(x => x.Id == MasterDataList.FirstOrDefault().ParentId).FirstOrDefault().Id;
+                if (MasterDataList.Count() > 0)
+                {
+                    model.Id = id;
+                    model.Name = MasterDataList.FirstOrDefault().Name;
+                    ChapterResults = db.Chapters.Where(x => x.LinkMenuId == MasterDataList.First().Id).Select(chapter => new ChapterData
+                    {
+                        Id = (int)chapter.Id,
+                        Heading = Utilities.SplitStringByLength(chapter.Heading, 40),
+                        Description = Utilities.SplitStringByLength(oClearHtmlScript.Replace(WebUtility.HtmlDecode(chapter.Description), string.Empty), 190),
+                        ChapterType = (int)chapter.Type,
+                        Link = chapter.Link,
+                        Thumbnail = chapter.Thumbnail != null ? chapter.Thumbnail : "/LocalData/Documents/no-image-icon-6.png",
+                        CreatedDate = (DateTime)chapter.CreatedDate,
+                        ModifiedDate = (DateTime)chapter.ModifiedDate,
+                        UserCommentsData = db.UserComments.Where(c => c.ChapterID == chapter.Id && c.Status == "Approved").ToList(),
+
+
+                    }).ToList().OrderByDescending(x => x.ModifiedDate).ToList();
+                }
+
+                model.ListChaptersById = ChapterResults;
+                model.ListTopRates = db.TopRateds.ToList();
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+        }
+        
+        ---------------------------------------------
+        Description = Utilities.SplitStringByLength(oClearHtmlScript.Replace(WebUtility.HtmlDecode(chapter.Description), string.Empty), 190)
